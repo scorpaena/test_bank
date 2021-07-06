@@ -1,24 +1,38 @@
-from rest_framework.exceptions import ValidationError
-from django.shortcuts import get_object_or_404
+from django.db import transaction
 from .models import Account, MoneyTransferLog
+from .exceptions import TransferValidationError, BalanceValidationError
 
-def get_account_to(account_to):
-    return get_object_or_404(Account, pk=account_to)
+def get_account(account):
+    return Account.objects.get(id=account)
 
-def is_account_to_valid(account_from, account_to):
-    account_to = get_account_to(account_to)
-    return account_to != account_from
+def get_account_for_transfer(account):
+    return Account.objects.select_for_update().get(id=account)
+
+def is_transfer_valid(account_from, account_to, amount):
+    account_from = get_account(account_from)
+    account_to = get_account(account_to)
+    if account_from == account_to:
+        raise TransferValidationError
+    if account_from.balance < amount:
+        raise BalanceValidationError
+    return True
 
 def money_transfer(account_from, account_to, amount):
-    account_to = get_account_to(account_to)
-    account_from.balance -= amount
-    account_to.balance += amount
-    if account_from.balance >= 0:
+    is_transfer_valid(account_from, account_to, amount)
+    with transaction.atomic():
+        account_from = get_account_for_transfer(account_from)
+        account_to = get_account_for_transfer(account_to)
+        account_from.balance -= amount
+        account_to.balance += amount
         account_from.save()
         account_to.save()
-    else:
-        raise ValidationError ("you don't have enough money")
 
-def to_money_transfer_log(**validated_data):
-    validated_data['account_to'] = get_account_to(validated_data['account_to'])
-    return MoneyTransferLog.objects.create(**validated_data)
+def to_money_transfer_log(account_from, account_to, user, amount):
+    account_from = get_account(account_from)
+    account_to = get_account(account_to)
+    return MoneyTransferLog.objects.create(
+        account_from=account_from,
+        account_to=account_to,
+        user=user,
+        amount=amount
+    )

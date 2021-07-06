@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_403_FORBIDDEN
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate, logout, login
 from django.contrib.auth.models import User
 from django.http import HttpResponse
@@ -11,11 +11,11 @@ from .serializers import UserSignUpSerializer, AuthenticationSerializer
 class UserSignUpView(generics.ListCreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSignUpSerializer
-    permission_classes = [IsAdminUser,]
 
 
 class Login(generics.CreateAPIView):
     serializer_class = AuthenticationSerializer
+    permission_classes = [AllowAny,]
     
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')
