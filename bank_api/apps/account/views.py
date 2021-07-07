@@ -1,4 +1,5 @@
 from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 from .models import Account, MoneyTransferLog
 from .serializers import (
     AccountCreationSerializer,
@@ -21,9 +22,7 @@ class AccountDetailView(generics.RetrieveAPIView):
 class MoneyTransferView(generics.CreateAPIView):
     queryset = Account.objects.all()
     serializer_class = MoneyTransferSerializer
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    permission_classes = [IsAuthenticated,]
 
 
 class MoneyTransferAllLogView(generics.ListAPIView):

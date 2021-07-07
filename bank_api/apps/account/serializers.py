@@ -3,10 +3,7 @@ from rest_framework.exceptions import ValidationError, NotFound, ParseError
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Account, MoneyTransferLog
 from .exceptions import TransferValidationError, BalanceValidationError
-from .services import (
-    money_transfer,
-    to_money_transfer_log
-)
+from .services import money_transfer
 
 
 class AccountCreationSerializer(serializers.ModelSerializer):
@@ -37,26 +34,40 @@ class AccountDetailSerializer(serializers.ModelSerializer):
 
 
 class MoneyTransferSerializer(serializers.Serializer):
-   
-    account_from = serializers.IntegerField(write_only=True)
-    account_to = serializers.IntegerField(write_only=True)
+
+    user = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+    account_from = serializers.PrimaryKeyRelatedField(
+        queryset = Account.objects.all()
+    )
+    account_to = serializers.PrimaryKeyRelatedField(
+        queryset = Account.objects.all()
+    )
     amount = serializers.IntegerField(write_only=True)
+
+    def validate(self, data):
+        if data['user'].is_staff or data['user'] == data['account_from'].user: 
+            return data
+        else:
+            raise serializers.ValidationError(
+                '{} does not belong to {}'.format(data['account_from'], data['user'])
+            )
 
     def create(self, validated_data):
         account_from = validated_data['account_from']
         account_to = validated_data['account_to']
-        user = validated_data['user']
         amount = validated_data['amount']
         try:
             money_transfer(account_from, account_to, amount)
-        except ObjectDoesNotExist:
-            raise NotFound ('double check if account from/to exists')
-        except TransferValidationError:
-            raise ValidationError ('account from/to must be different')
-        except BalanceValidationError:
-            raise ValidationError ('you don not have enough money')
+        except ObjectDoesNotExist as error:
+            raise NotFound (error)
+        except TransferValidationError as error:
+            raise ValidationError (error)
+        except BalanceValidationError as error:
+            raise ValidationError (error)
         else:
-            return to_money_transfer_log(account_from, account_to, user, amount)
+            return MoneyTransferLogSerializer().create(validated_data)
 
 
 class MoneyTransferLogSerializer(serializers.ModelSerializer):

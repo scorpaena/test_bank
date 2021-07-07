@@ -1,19 +1,14 @@
 from django.test import TestCase
-from rest_framework.exceptions import ValidationError
-from django.http import Http404
 from django.contrib.auth.models import User
 from datetime import date
 from apps.account.exceptions import (
     TransferValidationError, 
     BalanceValidationError
 )
-from apps.account.models import Account, MoneyTransferLog
+from apps.account.models import Account
 from apps.account.services import (
-    get_account,
-    get_account_for_transfer, 
     is_transfer_valid,
     money_transfer,
-    to_money_transfer_log
 )
 
 today = date.today()
@@ -46,17 +41,11 @@ class MoneyTransferTest(TestCase):
             user = self.user2
         )
 
-    def test_get_account(self):
-        self.assertEqual(get_account(account = 1), self.account1)
-
-    def test_get_account_for_transfer(self):
-        self.assertEqual(get_account_for_transfer(account = 1), self.account1)
-
     def test_is_transfer_valid(self):
         self.assertTrue(
             is_transfer_valid(
-                account_from = 1, 
-                account_to = 2, 
+                account_from = self.account1, 
+                account_to = self.account2, 
                 amount = 10
             )
         )
@@ -64,32 +53,23 @@ class MoneyTransferTest(TestCase):
     def test_is_transfer_valid_same_account(self):
         with self.assertRaises(TransferValidationError):
             is_transfer_valid(
-                account_from = 1, 
-                account_to = 1, 
+                account_from = self.account1, 
+                account_to = self.account1, 
                 amount = 10
             )
 
     def test_is_transfer_valid_negative_balance(self):
         with self.assertRaises(BalanceValidationError):
             is_transfer_valid(
-                account_from = 1, 
-                account_to = 2, 
+                account_from = self.account1, 
+                account_to = self.account2, 
                 amount = 101
             )
 
     def test_money_transfer(self):
         money_transfer(
-            account_from = 1,
-            account_to = 2,
+            account_from = self.account1,
+            account_to = self.account2,
             amount = 10
             )
-        self.assertEqual(get_account(2).balance - get_account(1).balance, 20)
-
-    def test_to_money_transfer_log(self):
-        log_instance = to_money_transfer_log(
-            account_from = 1,
-            account_to = 2,
-            user = self.user1,
-            amount = 10
-        )
-        self.assertTrue(isinstance(log_instance, MoneyTransferLog))
+        self.assertEqual(self.account2.balance - self.account1.balance, 20)
