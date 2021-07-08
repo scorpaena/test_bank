@@ -64,9 +64,9 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAdminUser',
     ],
 
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
+    # 'DEFAULT_AUTHENTICATION_CLASSES': [
+    #     'rest_framework_simplejwt.authentication.JWTAuthentication',
+    # ],
 }
 
 ROOT_URLCONF = 'bank_api.urls'

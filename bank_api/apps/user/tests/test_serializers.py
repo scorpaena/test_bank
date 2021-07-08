@@ -4,23 +4,22 @@ from apps.user.serializers import UserSignUpSerializer
 
 
 class UserSerializerTestCase(TestCase):
-    
     def test_user_signup(self):
         user_signup = UserSignUpSerializer(
-            data = {
-            'username': 'foo', 
-            'password1': 'bar123$%',
-            'password2': 'bar123$%',
+            data={
+                "username": "foo",
+                "password1": "bar123$%",
+                "password2": "bar123$%",
             }
         )
         self.assertTrue(user_signup.is_valid())
-    
+
     def test_user_signup_invalid_data(self):
         user_signup = UserSignUpSerializer(
-            data = {
-                'username': '', 
-                'password1': 'bar',
-                'password2': 'bar',
+            data={
+                "username": "",
+                "password1": "bar",
+                "password2": "bar",
             }
         )
         self.assertFalse(user_signup.is_valid())
@@ -28,10 +27,10 @@ class UserSerializerTestCase(TestCase):
     def test_user_signup_create(self):
         user_signup = UserSignUpSerializer()
         user_signup.create(
-            validated_data = {
-                'username': 'foo', 
-                'password1': 'bar123$%',
-                'password2': 'bar123$%',
+            validated_data={
+                "username": "foo",
+                "password1": "bar123$%",
+                "password2": "bar123$%",
             }
         )
 
@@ -39,10 +38,10 @@ class UserSerializerTestCase(TestCase):
         user_signup = UserSignUpSerializer()
         with self.assertRaises(ValidationError):
             user_signup.create(
-                validated_data = {
-                'username': 'foo', 
-                'password1': 'bar123$%',
-                'password2': 'bar123$',
+                validated_data={
+                    "username": "foo",
+                    "password1": "bar123$%",
+                    "password2": "bar123$",
                 }
             )
 
@@ -50,9 +49,9 @@ class UserSerializerTestCase(TestCase):
         user_signup = UserSignUpSerializer()
         with self.assertRaises(ValidationError):
             user_signup.create(
-                validated_data = {
-                    'username': 'foo', 
-                    'password1': 'bar',
-                    'password2': 'bar',
+                validated_data={
+                    "username": "foo",
+                    "password1": "bar",
+                    "password2": "bar",
                 }
             )

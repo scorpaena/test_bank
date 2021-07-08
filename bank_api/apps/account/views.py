@@ -5,7 +5,7 @@ from .serializers import (
     AccountCreationSerializer,
     AccountDetailSerializer,
     MoneyTransferSerializer,
-    MoneyTransferLogSerializer
+    MoneyTransferLogSerializer,
 )
 
 
@@ -22,7 +22,9 @@ class AccountDetailView(generics.RetrieveAPIView):
 class MoneyTransferView(generics.CreateAPIView):
     queryset = Account.objects.all()
     serializer_class = MoneyTransferSerializer
-    permission_classes = [IsAuthenticated,]
+    permission_classes = [
+        IsAuthenticated,
+    ]
 
 
 class MoneyTransferAllLogView(generics.ListAPIView):
@@ -35,6 +37,10 @@ class MoneyTransferAccountLogView(generics.ListAPIView):
     serializer_class = MoneyTransferLogSerializer
 
     def get_queryset(self):
-        return super().get_queryset().filter(
-            account_from=self.kwargs.get('account_from'), 
+        return (
+            super()
+            .get_queryset()
+            .filter(
+                account_from=self.kwargs.get("account_from"),
+            )
         )
